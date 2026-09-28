@@ -1,1 +1,140 @@
-Quiet Type — Тренажер печати
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiet Type — Тренажер печати</title>
+    <style>
+        :root {
+            --bg-color: #f7f6f2;
+            --card-bg: #ffffff;
+            --text-main: #2c2c2c;
+            --text-muted: #8c8c8c;
+            --accent: #5a6b5c; /* Оливково-пастельный акцент */
+            --error: #ba5c53;
+            --correct: #5c8263;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 700px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .modes {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: 1px solid #e0e0e0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(90, 107, 92, 0.05);
+        }
+
+        #text-display {
+            font-size: 1.4rem;
+            line-height: 1.8;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+            margin-bottom: 30px;
+            word-break: break-all;
+            background: #faf9f5;
+            padding: 20px;
+            border-radius: 12px;
+            min-height: 80px;
+        }
+
+        .char {
+            color: var(--text-muted);
+        }
+
+        .char.correct {
+            color: var(--correct);
+        }
+
+        .char.incorrect {
+            color: var(--error);
+            background: rgba(186, 92, 83, 0.1);
+        }
+
+        .char.current {
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .restart-tip {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>КЛАВИАТУРНЫЙ ТРЕНАЖЕР</h1>
+        
+        <div class="modes">
+            <button class="mode-btn active" onclick="setMode('words')">Слова</button>
+            <button class="mode-btn" onclick="setMode('symbols')">Спецсимволы</button>
+            <button class="mode-btn" onclick="setMode('code')">Код / Питон</button>
+        </div>
+
+        <div id="text-display"></div>
+
+        <div class="stats">
+            <div>Скорость: <span id="wpm">0</span> WPM</div>
+            <div>Ошибки: <span id="errors">0</span></div>
+            <div>Точность: <span id="accuracy">100</span>%</div>
+        </div>
+    </div>
+
+    <div class="restart-tip">Нажми <b>Tab</b> для перезапуска текста</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
