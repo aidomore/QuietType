@@ -21,6 +21,8 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-o
 #text .ok{color:var(--ink)}
 #text .bad{color:var(--bad);background:var(--badbg)}
 #text .cur{box-shadow:-2px 0 0 var(--acc);color:var(--ink);background:color-mix(in srgb,var(--acc) 14%,transparent)}
+#text.done{border-color:var(--ok);border-width:2px}
+#note{color:var(--bad);margin:10px 2px 0}
 #stats{display:flex;gap:28px;margin:14px 2px;color:var(--dim)}
 #stats b{color:var(--ink);font-size:1.3rem;font-variant-numeric:tabular-nums;margin-left:6px}
 #result{background:var(--panel);border:1px solid var(--acc);border-radius:12px;padding:14px 20px;margin-bottom:14px}
@@ -74,6 +76,7 @@ footer{margin-top:24px;color:var(--dim);font-size:.9rem}
   </div>
 </div>
 <div id="text" aria-live="off"></div>
+<p id="note" hidden></p>
 <div id="stats"><span>Слов/мин<b id="wpm">0</b></span><span>Точность<b id="acc">100%</b></span><span>Время<b id="time">0:00</b></span><span>Лучший<b id="best">–</b></span></div>
 <div id="result" hidden></div>
 <div id="kb"></div>
@@ -152,7 +155,7 @@ function draw(){
   if(!target){
     document.querySelectorAll('.k.on').forEach(k=>k.classList.remove('on'));
     $('#text').innerHTML='<span>Вставьте текст выше и нажмите «Разбить на упражнения».</span>';
-    stats();return;
+    $('#note').hidden=true;stats();return;
   }
   let h='';
   for(let i=0;i<target.length;i++){
@@ -161,6 +164,10 @@ function draw(){
     h+=`<span class="${cls}">${c==='\n'?'↵':esc(c)}</span>${c==='\n'?'\n':''}`;
   }
   $('#text').innerHTML=h;
+  $('#text').classList.toggle('done',done);
+  const atEnd=!done&&typed.length>=target.length;
+  $('#note').hidden=!atEnd;
+  if(atEnd)$('#note').textContent='Конец текста, но в нём есть ошибки (красные символы). Исправьте их клавишей Backspace или нажмите Enter, чтобы завершить как есть.';
   const n=target[typed.length];
   document.querySelectorAll('.k').forEach(k=>k.classList.toggle('on',!done&&n!==undefined&&k.dataset.k===(n===' '?' ':n.toLowerCase())));
   stats();
@@ -202,9 +209,10 @@ document.addEventListener('keydown',e=>{
   const ch=k==='Enter'?'\n':k.length===1?k:null;
   if(ch===null)return;
   e.preventDefault();
-  if(typed.length>=target.length)return;
+  if(typed.length>=target.length){if(k==='Enter'&&target)finish();return}
   if(!t0)t0=performance.now();
   const exp=target[typed.length];
+  if(ch===' '&&exp!==' '&&auto.has(typed.length-1))return;
   keys++;tries[exp]=(tries[exp]||0)+1;
   if(ch===exp)hit++;else miss[exp]=(miss[exp]||0)+1;
   typed.push(ch);
