@@ -1,250 +1,309 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiet Type — Тренажер печати</title>
-    <style>
-        :root {
-            --bg-color: #f7f6f2;
-            --card-bg: #ffffff;
-            --text-main: #2c2c2c;
-            --text-muted: #8c8c8c;
-            --accent: #5a6b5c;
-            --error: #ba5c53;
-            --correct: #5c8263;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            width: 700px;
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 400;
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-        }
-
-        .modes {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .mode-btn {
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            color: var(--text-muted);
-            transition: all 0.2s;
-        }
-
-        .mode-btn.active {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: rgba(90, 107, 92, 0.05);
-        }
-
-        #text-display {
-            font-size: 1.4rem;
-            line-height: 1.8;
-            letter-spacing: 0.5px;
-            font-family: monospace;
-            margin-bottom: 30px;
-            word-break: break-all;
-            background: #faf9f5;
-            padding: 20px;
-            border-radius: 12px;
-            min-height: 80px;
-        }
-
-        .char {
-            color: var(--text-muted);
-        }
-
-        .char.correct {
-            color: var(--correct);
-        }
-
-        .char.incorrect {
-            color: var(--error);
-            background: rgba(186, 92, 83, 0.1);
-        }
-
-        .char.current {
-            border-bottom: 2px solid var(--accent);
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-
-        .restart-tip {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Слепая печать · English</title>
+<style>
+:root{--bg:#E9EEF4;--panel:#F7F9FC;--ink:#1C2340;--dim:#8A93AB;--ok:#1F7A6B;--bad:#C0392B;--badbg:#F6D5D0;--acc:#5B4BDB;--line:#D3DAE6}
+@media (prefers-color-scheme:dark){:root{--bg:#12162A;--panel:#1A2040;--ink:#E6E9F5;--dim:#6F7898;--ok:#5FD3B8;--bad:#FF8A7A;--badbg:#4A2530;--acc:#9A8CFF;--line:#2B3358}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 18px 40px}
+h1{font-size:1.25rem;margin:0 0 16px;font-weight:650}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 14px;cursor:pointer}
+button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+button:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sp{flex:1}
+#text{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px 28px;font:1.45rem/2.1 ui-monospace,"SF Mono",Consolas,"Liberation Mono",monospace;white-space:pre-wrap;word-break:break-word;min-height:190px}
+#text span{color:var(--dim);border-radius:3px}
+#text .ok{color:var(--ink)}
+#text .bad{color:var(--bad);background:var(--badbg)}
+#text .cur{box-shadow:-2px 0 0 var(--acc);color:var(--ink);background:color-mix(in srgb,var(--acc) 14%,transparent)}
+#stats{display:flex;gap:28px;margin:14px 2px;color:var(--dim)}
+#stats b{color:var(--ink);font-size:1.3rem;font-variant-numeric:tabular-nums;margin-left:6px}
+#result{background:var(--panel);border:1px solid var(--acc);border-radius:12px;padding:14px 20px;margin-bottom:14px}
+#result p{margin:4px 0}
+#kb{display:flex;flex-direction:column;gap:6px;align-items:center;margin-top:20px}
+#kb.off{display:none}
+.row{display:flex;gap:6px}
+.k{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--dim);font-family:ui-monospace,Consolas,monospace}
+.k.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.k.sp2{width:280px}
+#hist{margin-top:34px;border-top:1px solid var(--line);padding-top:18px}
+#hist h2{font-size:1.05rem;margin:0 0 8px}
+#hist svg{width:100%;height:70px;display:block;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.cap{color:var(--dim);font-size:.9rem;margin:10px 0 4px}
+#weak{margin:14px 0}
+#cust{margin-bottom:14px}
+#cust textarea{width:100%;font:.95rem/1.5 ui-monospace,Consolas,monospace;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical;margin-bottom:8px}
+#cust label{display:flex;gap:6px;align-items:center;font-size:.9rem}
+#cust .cap{margin:0}
+footer{margin-top:24px;color:var(--dim);font-size:.9rem}
+@media (max-width:600px){#text{font-size:1.1rem;padding:16px}.k{width:28px;height:34px}.k.sp2{width:170px}}
+</style>
 </head>
 <body>
+<main>
+<h1>Слепая печать · English</h1>
+<div class="bar">
+  <button data-mode="combo" aria-pressed="true">Буквосочетания</button>
+  <button data-mode="text" aria-pressed="false">Тексты</button>
+  <button data-mode="code" aria-pressed="false">Python</button>
+  <button data-mode="custom" aria-pressed="false">Свой текст</button>
+  <span class="sp"></span>
+  <select id="lvl" aria-label="Уровень">
+    <option value="home">Средний ряд</option>
+    <option value="top">Верхний ряд</option>
+    <option value="bottom">Нижний ряд</option>
+    <option value="bi">Частые пары</option>
+    <option value="tri">Частые тройки</option>
+    <option value="mix">Все буквы</option>
+    <option value="weak">Мои слабые клавиши</option>
+  </select>
+  <button id="new">Новое упражнение</button>
+  <button id="kbt" aria-pressed="true">Подсказка-клавиатура</button>
+</div>
+<div id="cust" hidden>
+  <textarea id="src" rows="5" placeholder="Вставьте сюда любой английский текст или код"></textarea>
+  <div class="bar">
+    <button id="load">Разбить на упражнения</button>
+    <label><input type="checkbox" id="keepnl"> сохранять переносы строк (для кода)</label>
+    <span id="cinfo" class="cap"></span>
+  </div>
+</div>
+<div id="text" aria-live="off"></div>
+<div id="stats"><span>Слов/мин<b id="wpm">0</b></span><span>Точность<b id="acc">100%</b></span><span>Время<b id="time">0:00</b></span><span>Лучший<b id="best">–</b></span></div>
+<div id="result" hidden></div>
+<div id="kb"></div>
+<section id="hist">
+  <h2>Прогресс: <span id="hm"></span></h2>
+  <div id="charts"></div>
+  <p id="weak"></p>
+  <div class="bar">
+    <button id="exp">Скачать историю</button>
+    <button id="imp">Загрузить историю</button>
+    <input id="file" type="file" accept=".json" hidden>
+  </div>
+  <p class="cap">Данные хранятся в этом браузере. Чтобы не потерять их или перенести на другой компьютер, скачайте файл истории.</p>
+</section>
+<footer>Печатайте прямо на странице, смотрите на текст, а не на клавиши. Backspace исправляет ошибку, Esc — новое упражнение, Enter после финиша — следующее.</footer>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.random()*a.length|0];
+const rnd=(s,n)=>Array.from({length:n},()=>pick(s)).join('');
+const words=s=>s.split(' ');
+const L={home:'asdfghjkl',top:'qwertyuiop',bottom:'zxcvbnm',all:'abcdefghijklmnopqrstuvwxyz'};
+const BI=words('th he in er an re on at en nd ti es or te of ed is it al ar st to nt ng se ha as ou io le ve co me de hi ri ro ic ne ea ra ce li ch ll be ma si om ur');
+const TRI=words('the and ing ion tio ent ati for her ter hat tha ere ate his con res ver all ons nce men ith ted ers pro thi wit are ess not ive was ect rea com eve per int est sta cti ica ist ear ain one our iti rat');
+const rep=f=>Array.from({length:12},()=>{const c=f();return c+' '+c}).join(' ');
+const LEVELS={
+  home:()=>rep(()=>rnd(L.home,pick([2,3]))),
+  top:()=>rep(()=>rnd(L.top,pick([2,3]))),
+  bottom:()=>rep(()=>rnd(L.bottom,pick([2,3]))),
+  bi:()=>rep(()=>pick(BI)),
+  tri:()=>rep(()=>pick(TRI)),
+  mix:()=>rep(()=>rnd(L.all,3)),
+  weak:()=>{const w=weakKeys();return w.length?rep(()=>[pick(w),pick(L.all),pick(L.all)].sort(()=>Math.random()-.5).join('')):LEVELS.mix()}
+};
+const TEXTS=[
+ "Practice a little every day. Speed comes from accuracy, so keep your eyes on the screen and let your fingers find the keys.",
+ "The quick brown fox jumps over the lazy dog while a pale moon rises above the quiet hills.",
+ "Good habits are built slowly. Type each word calmly, correct every mistake, and do not chase speed before the rhythm feels natural.",
+ "A small team can change a lot when everyone has a voice. Write clearly, listen carefully, and say what you mean.",
+ "Rain tapped on the window all morning. She made tea, opened her laptop, and began to write the first page."
+];
+const CODE=[
+ ['def greet(name):','    if not name:','        return "Hello, world!"','    return f"Hello, {name}!"'],
+ ['numbers = [3, 1, 4, 1, 5, 9, 2, 6]','squares = [n ** 2 for n in numbers if n % 2 == 0]','print(sorted(squares, reverse=True))'],
+ ['def fib(n):','    a, b = 0, 1','    for _ in range(n):','        a, b = b, a + b','    return a'],
+ ['class Counter:','    def __init__(self):','        self.count = 0','','    def add(self, step=1):','        self.count += step','        return self.count'],
+ ['with open("notes.txt") as f:','    words = f.read().split()','freq = {}','for w in words:','    freq[w] = freq.get(w, 0) + 1'],
+ ['try:','    value = int(input("Number: "))','except ValueError:','    print("Not a number")','else:','    print(value * 2)']
+].map(a=>a.join('\n'));
 
-    <div class="container">
-        <h1>КЛАВИАТУРНЫЙ ТРЕНАЖЕР</h1>
-        
-        <div class="modes">
-            <button class="mode-btn active" id="btn-words" onclick="setMode('words', event)">Слова</button>
-            <button class="mode-btn" id="btn-symbols" onclick="setMode('symbols', event)">Спецсимволы</button>
-            <button class="mode-btn" id="btn-code" onclick="setMode('code', event)">Код / Питон</button>
-        </div>
+let mode='combo',target='',typed=[],auto=new Set(),miss={},tries={},keys=0,hit=0,t0=0,tEnd=0,done=false,last='';
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let best=load('tt-best',{}),hist=load('tt-hist',[]),kstat=load('tt-keys',{});
 
-        <div id="text-display">Загрузка...</div>
-
-        <div class="stats">
-            <div>Скорость: <span id="wpm">0</span> WPM</div>
-            <div>Ошибки: <span id="errors">0</span></div>
-            <div>Точность: <span id="accuracy">100</span>%</div>
-        </div>
-    </div>
-
-    <div class="restart-tip">Нажми <b>Tab</b> для перезапуска текста</div>
-
-    <script>
-        const textDisplay = document.getElementById('text-display');
-        const wpmElement = document.getElementById('wpm');
-        const errorsElement = document.getElementById('errors');
-        const accuracyElement = document.getElementById('accuracy');
-
-        const samples = {
-            words: "дом кошка солнце машина облако река дорога музыка стекло письмо птица дерево книга чайник зеркало телефон занавеска",
-            symbols: "a!b@c#d$e%f^g&h*i(j)k_l+m{n}o|p:q\"r<s?>t~u`v-w=x[y]z;1|2@3#4$5%6^7&8*9(0)",
-            code: "def calculate_sum(a, b):\n    if a > 0:\n        return a + b\n    return [0, {}]"
-        };
-
-        let currentMode = 'words';
-        let charElements = [];
-        let currentIndex = 0;
-        let errorsCount = 0;
-        let startTime = null;
-        let isFinished = false;
-
-        function initTest() {
-            textDisplay.innerHTML = '';
-            currentIndex = 0;
-            errorsCount = 0;
-            startTime = null;
-            isFinished = false;
-            errorsElement.textContent = '0';
-            accuracyElement.textContent = '100';
-            wpmElement.textContent = '0';
-
-            const text = samples[currentMode];
-            
-            for (let char of text) {
-                const span = document.createElement('span');
-                span.classList.add('char');
-                span.textContent = char;
-                textDisplay.appendChild(span);
-            }
-
-            charElements = textDisplay.querySelectorAll('.char');
-            if (charElements.length > 0) {
-                charElements[0].classList.add('current');
-            }
-        }
-
-        function setMode(mode, e) {
-            currentMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            if (e && e.target) {
-                e.target.classList.add('active');
-            }
-            initTest();
-        }
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                initTest();
-                return;
-            }
-
-            if (isFinished || (e.key.length > 1 && e.key !== 'Backspace')) return;
-
-            if (!startTime) {
-                startTime = new Date();
-            }
-
-            if (currentIndex >= charElements.length) return;
-
-            const currentCharSpan = charElements[currentIndex];
-
-            if (e.key === 'Backspace') {
-                if (currentIndex > 0) {
-                    charElements[currentIndex].classList.remove('current');
-                    currentIndex--;
-                    charElements[currentIndex].classList.remove('correct', 'incorrect');
-                    charElements[currentIndex].classList.add('current');
-                }
-                return;
-            }
-
-            if (e.key === currentCharSpan.textContent) {
-                currentCharSpan.classList.remove('current', 'incorrect');
-                currentCharSpan.classList.add('correct');
-                currentIndex++;
-            } else {
-                currentCharSpan.classList.remove('current');
-                currentCharSpan.classList.add('incorrect');
-                errorsCount++;
-                currentIndex++;
-                errorsElement.textContent = errorsCount;
-            }
-
-            const accuracy = Math.max(0, Math.floor(((currentIndex - errorsCount) / currentIndex) * 100));
-            accuracyElement.textContent = accuracy;
-
-            const elapsedTime = (new Date() - startTime) / 60000;
-            if (elapsedTime > 0) {
-                const wpm = Math.round((currentIndex / 5) / elapsedTime);
-                wpmElement.textContent = wpm;
-            }
-
-            if (currentIndex < charElements.length) {
-                charElements[currentIndex].classList.add('current');
-            } else {
-                isFinished = true;
-            }
-        });
-
-        // Запуск при загрузке страницы
-        initTest();
-    </script>
+function newTarget(){
+  let t;
+  if(mode==='combo')return LEVELS[$('#lvl').value]();
+  if(mode==='custom'){
+    if(!chunks.length){$('#cinfo').textContent='';return ''}
+    const n=cs.ci%chunks.length;cs.ci=n+1;save('tt-custom',cs);
+    $('#cinfo').textContent=`Фрагмент ${n+1} из ${chunks.length}`;
+    return chunks[n];
+  }
+  const pool=mode==='text'?TEXTS:CODE;
+  do t=pick(pool);while(t===last&&pool.length>1);
+  return last=t;
+}
+function start(){
+  target=newTarget();typed=[];auto=new Set();miss={};tries={};keys=hit=t0=tEnd=0;done=false;
+  $('#result').hidden=true;$('#lvl').style.display=mode==='combo'?'':'none';$('#cust').hidden=mode!=='custom';
+  draw();renderHist();
+}
+const esc=c=>c==='<'?'&lt;':c==='&'?'&amp;':c;
+function draw(){
+  if(!target){
+    document.querySelectorAll('.k.on').forEach(k=>k.classList.remove('on'));
+    $('#text').innerHTML='<span>Вставьте текст выше и нажмите «Разбить на упражнения».</span>';
+    stats();return;
+  }
+  let h='';
+  for(let i=0;i<target.length;i++){
+    const c=target[i];
+    const cls=i<typed.length?(typed[i]===c?'ok':'bad'):i===typed.length?'cur':'';
+    h+=`<span class="${cls}">${c==='\n'?'↵':esc(c)}</span>${c==='\n'?'\n':''}`;
+  }
+  $('#text').innerHTML=h;
+  const n=target[typed.length];
+  document.querySelectorAll('.k').forEach(k=>k.classList.toggle('on',!done&&n!==undefined&&k.dataset.k===(n===' '?' ':n.toLowerCase())));
+  stats();
+}
+function stats(){
+  const end=done?tEnd:performance.now(),min=t0?(end-t0)/60000:0;
+  const chars=done?target.length:typed.length;
+  $('#wpm').textContent=min>0?Math.round(chars/5/min):0;
+  $('#acc').textContent=(keys?Math.round(hit/keys*100):100)+'%';
+  const s=t0?Math.floor((end-t0)/1000):0;
+  $('#time').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  $('#best').textContent=best[mode]||'–';
+}
+function finish(){
+  done=true;tEnd=performance.now();
+  const w=Math.round(target.length/5/((tEnd-t0)/60000));
+  if(w>(best[mode]||0)){best[mode]=w;save('tt-best',best)}
+  const a=keys?Math.round(hit/keys*100):100;
+  hist.push({t:Date.now(),m:mode,w,a});if(hist.length>2000)hist.shift();save('tt-hist',hist);
+  for(const c in tries){const l=c.toLowerCase(),s=kstat[l]||(kstat[l]={n:0,e:0});s.n+=tries[c];s.e+=miss[c]||0}
+  save('tt-keys',kstat);
+  const name=c=>c===' '?'пробел':c==='\n'?'Enter':c;
+  const hard=Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([c,n])=>`${name(c)} (${n})`).join(', ');
+  $('#result').innerHTML=`<p><b>Готово.</b> ${w} слов/мин, точность ${$('#acc').textContent}.</p><p>${hard?'Чаще всего ошибки на: '+hard+'.':'Ни одной ошибки.'}</p><p>Enter — следующее упражнение.</p>`;
+  $('#result').hidden=false;draw();renderHist();
+}
+function back(){
+  if(!typed.length)return;
+  let i=typed.length-1;typed.pop();
+  while(auto.has(i)&&typed.length){i=typed.length-1;typed.pop()}
+}
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('textarea,input,select'))return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const k=e.key;
+  if(k==='Escape'){start();return}
+  if(done){if(k==='Enter'){e.preventDefault();start()}return}
+  if(k==='Backspace'){e.preventDefault();back();draw();return}
+  const ch=k==='Enter'?'\n':k.length===1?k:null;
+  if(ch===null)return;
+  e.preventDefault();
+  if(typed.length>=target.length)return;
+  if(!t0)t0=performance.now();
+  const exp=target[typed.length];
+  keys++;tries[exp]=(tries[exp]||0)+1;
+  if(ch===exp)hit++;else miss[exp]=(miss[exp]||0)+1;
+  typed.push(ch);
+  if((mode==='code'||mode==='custom')&&ch==='\n'&&exp==='\n'){
+    while(target[typed.length]===' '){auto.add(typed.length);typed.push(' ')}
+  }
+  if(typed.join('')===target)finish();else draw();
+});
+document.addEventListener('keyup',e=>{if(e.key===' ')e.preventDefault()});
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{
+  mode=b.dataset.mode;
+  document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  b.blur();start();
+});
+$('#lvl').onchange=()=>{$('#lvl').blur();start()};
+$('#new').onclick=e=>{e.target.blur();start()};
+$('#kbt').onclick=e=>{const on=$('#kb').classList.toggle('off');e.target.setAttribute('aria-pressed',!on);e.target.blur()};
+['qwertyuiop','asdfghjkl;','zxcvbnm,./'].forEach((r,i)=>{
+  const d=document.createElement('div');d.className='row';d.style.marginLeft=[0,22,54][i]+'px';
+  d.innerHTML=[...r].map(c=>`<div class="k" data-k="${c}">${c}</div>`).join('');
+  $('#kb').append(d);
+});
+$('#kb').insertAdjacentHTML('beforeend','<div class="row"><div class="k sp2" data-k=" "></div></div>');
+const worst=()=>Object.entries(kstat).filter(([c,s])=>s.n>=5&&s.e>0).sort((a,b)=>b[1].e/b[1].n-a[1].e/a[1].n);
+const weakKeys=()=>worst().filter(x=>/[a-z]/.test(x[0])).slice(0,6).map(x=>x[0]);
+function chart(d,col,name,unit){
+  if(d.length<2)return`<p class="cap">${name}: нужно минимум два упражнения</p>`;
+  const lo=Math.min(...d),hi=Math.max(...d),r=hi-lo||1,W=600,H=70;
+  const p=d.map((v,i)=>`${(i/(d.length-1)*W).toFixed(1)},${(H-6-(v-lo)/r*(H-12)).toFixed(1)}`).join(' ');
+  return`<p class="cap">${name}: сейчас ${d[d.length-1]} ${unit}, от ${lo} до ${hi}</p><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${name}"><polyline points="${p}" fill="none" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function renderHist(){
+  const all=hist.filter(x=>x.m===mode),h=all.slice(-40);
+  $('#hm').textContent={combo:'буквосочетания',text:'тексты',code:'Python',custom:'свой текст'}[mode];
+  const day=new Date().toDateString(),today=hist.filter(x=>new Date(x.t).toDateString()===day).length;
+  $('#charts').innerHTML=(h.length?`<p class="cap">Упражнений в этом режиме: ${all.length}. Сегодня во всех режимах: ${today}. На графиках последние ${h.length}.</p>`:'<p class="cap">Пока нет данных: завершите первое упражнение.</p>')
+    +chart(h.map(x=>x.w),'var(--acc)','Скорость','слов/мин')+chart(h.map(x=>x.a),'var(--ok)','Точность','%');
+  const wk=worst().slice(0,8).map(([c,s])=>`${c===' '?'пробел':c==='\n'?'Enter':c} ${Math.round(s.e/s.n*100)}%`);
+  $('#weak').textContent=wk.length?'Больше всего ошибок за всё время: '+wk.join(', ')+'. Уровень «Мои слабые клавиши» тренирует именно их.':'Статистика по клавишам появится после нескольких упражнений.';
+}
+$('#exp').onclick=e=>{
+  e.target.blur();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({best,hist,kstat})],{type:'application/json'}));
+  a.download='typing-progress.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$('#imp').onclick=e=>{e.target.blur();$('#file').click()};
+$('#file').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';
+  if(!f)return;
+  try{
+    const d=JSON.parse(await f.text());
+    if(!Array.isArray(d.hist)||!d.best||!d.kstat)throw 0;
+    if(!confirm('Заменить текущую историю данными из файла?'))return;
+    best=d.best;hist=d.hist;kstat=d.kstat;
+    save('tt-best',best);save('tt-hist',hist);save('tt-keys',kstat);
+    renderHist();stats();
+  }catch(err){alert('Не удалось прочитать файл. Нужен файл, скачанный из этого тренажёра.')}
+};
+function normalize(s){
+  return s.replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[\u2013\u2014]/g,'-')
+    .replace(/\u2026/g,'...').replace(/\u00A0/g,' ').replace(/\t/g,'    ').replace(/\r/g,'');
+}
+function makeChunks(src,nl){
+  const t=normalize(src).replace(/[^\x20-\x7E\n]/g,'');
+  const out=[];
+  if(nl){
+    let cur=[];
+    for(const l of t.split('\n').map(l=>l.replace(/\s+$/,''))){
+      cur.push(l);
+      if(cur.join('\n').length>=250){out.push(cur.join('\n'));cur=[]}
+    }
+    if(cur.length)out.push(cur.join('\n'));
+    return out.map(s=>s.replace(/^\n+|\n+$/g,'')).filter(s=>s.trim());
+  }
+  let cur='';
+  for(const s of t.replace(/\s+/g,' ').trim().match(/[^.!?]+[.!?]*\s*/g)||[]){
+    if(cur&&(cur+s).length>220){out.push(cur.trim());cur=''}
+    cur+=s;
+    while(cur.length>320){let i=cur.lastIndexOf(' ',260);if(i<1)i=260;out.push(cur.slice(0,i).trim());cur=cur.slice(i)}
+  }
+  if(cur.trim())out.push(cur.trim());
+  return out;
+}
+const cs=load('tt-custom',{src:'',nl:false,ci:0});
+let chunks=cs.src?makeChunks(cs.src,cs.nl):[];
+$('#src').value=cs.src;$('#keepnl').checked=cs.nl;
+$('#load').onclick=e=>{
+  e.target.blur();
+  const src=$('#src').value,nl=$('#keepnl').checked,c=makeChunks(src,nl);
+  if(!c.length){alert('Не нашла в тексте символов английской раскладки. Вставьте английский текст.');return}
+  const removed=(normalize(src).match(/[^\x20-\x7E\n]/g)||[]).length;
+  Object.assign(cs,{src,nl,ci:0});chunks=c;save('tt-custom',cs);
+  start();
+  if(removed)$('#cinfo').textContent+=`. Убрано символов, которых нет на английской клавиатуре: ${removed}`;
+};
+setInterval(()=>{if(t0&&!done)stats()},250);
+start();
+</script>
 </body>
 </html>
