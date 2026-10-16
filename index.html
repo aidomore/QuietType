@@ -42,6 +42,8 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-o
 #cust textarea{width:100%;font:.95rem/1.5 ui-monospace,Consolas,monospace;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;resize:vertical;margin-bottom:8px}
 #cust label{display:flex;gap:6px;align-items:center;font-size:.9rem}
 #cust .cap{margin:0}
+#acct{display:flex;gap:10px;align-items:center;margin:0 0 14px;color:var(--dim);font-size:.9rem}
+#acct img{width:24px;height:24px;border-radius:50%}
 footer{margin-top:24px;color:var(--dim);font-size:.9rem}
 @media (max-width:600px){#text{font-size:1.1rem;padding:16px}.k{width:28px;height:34px}.k.sp2{width:170px}}
 </style>
@@ -49,6 +51,7 @@ footer{margin-top:24px;color:var(--dim);font-size:.9rem}
 <body>
 <main>
 <h1>Слепая печать · English</h1>
+<div id="acct" hidden><span id="who"></span><button id="signin" hidden>Войти через Google</button><button id="signout" hidden>Выйти</button></div>
 <div class="bar">
   <button data-mode="combo" aria-pressed="true">Буквосочетания</button>
   <button data-mode="text" aria-pressed="false">Тексты</button>
@@ -89,7 +92,7 @@ footer{margin-top:24px;color:var(--dim);font-size:.9rem}
     <button id="imp">Загрузить историю</button>
     <input id="file" type="file" accept=".json" hidden>
   </div>
-  <p class="cap">Данные хранятся в этом браузере. Чтобы не потерять их или перенести на другой компьютер, скачайте файл истории.</p>
+  <p class="cap" id="where">Данные хранятся в этом браузере. Войдите через Google, чтобы прогресс сохранялся в облаке и был доступен на любом компьютере, или скачайте файл истории.</p>
 </section>
 <footer>Печатайте прямо на странице, смотрите на текст, а не на клавиши. Backspace исправляет ошибку, Esc — новое упражнение, Enter после финиша — следующее.</footer>
 </main>
@@ -193,6 +196,7 @@ function finish(){
   const hard=Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([c,n])=>`${name(c)} (${n})`).join(', ');
   $('#result').innerHTML=`<p><b>Готово.</b> ${w} слов/мин, точность ${$('#acc').textContent}.</p><p>${hard?'Чаще всего ошибки на: '+hard+'.':'Ни одной ошибки.'}</p><p>Enter — следующее упражнение.</p>`;
   $('#result').hidden=false;draw();renderHist();
+  window.qtCloud?.finished({mode,w,a});
 }
 function back(){
   if(!typed.length)return;
@@ -270,7 +274,7 @@ $('#file').onchange=async e=>{
     if(!confirm('Заменить текущую историю данными из файла?'))return;
     best=d.best;hist=d.hist;kstat=d.kstat;
     save('tt-best',best);save('tt-hist',hist);save('tt-keys',kstat);
-    renderHist();stats();
+    renderHist();stats();window.qtCloud?.push();
   }catch(err){alert('Не удалось прочитать файл. Нужен файл, скачанный из этого тренажёра.')}
 };
 function normalize(s){
@@ -310,8 +314,13 @@ $('#load').onclick=e=>{
   start();
   if(removed)$('#cinfo').textContent+=`. Убрано символов, которых нет на английской клавиатуре: ${removed}`;
 };
+window.qt={
+  get:()=>({best,hist,kstat}),
+  set(d){best=d.best;hist=d.hist;kstat=d.kstat;save('tt-best',best);save('tt-hist',hist);save('tt-keys',kstat);renderHist();stats()}
+};
 setInterval(()=>{if(t0&&!done)stats()},250);
 start();
 </script>
+<script type="module" src="cloud.js"></script>
 </body>
 </html>

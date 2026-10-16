@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Каждый пользователь видит и меняет только свой документ с прогрессом.
+    match /users/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['best', 'hist', 'kstat', 'updatedAt'])
+        && request.resource.data.best is map
+        && request.resource.data.kstat is map
+        && request.resource.data.hist is list
+        && request.resource.data.hist.size() <= 2000;
+    }
+  }
+}
