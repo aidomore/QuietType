@@ -21,6 +21,9 @@ button:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-o
 #text .ok{color:var(--ink)}
 #text .bad{color:var(--bad);background:var(--badbg)}
 #text .cur{box-shadow:-2px 0 0 var(--acc);color:var(--ink);background:color-mix(in srgb,var(--acc) 14%,transparent)}
+#text .cur.bad{box-shadow:-2px 0 0 var(--bad);color:var(--bad);background:var(--badbg);animation:nudge .18s}
+#text .fix{text-decoration:underline wavy var(--bad);text-underline-offset:4px}
+@keyframes nudge{0%{background:var(--bad);color:var(--panel)}}
 #text.done{border-color:var(--ok);border-width:2px}
 #note{color:var(--bad);margin:10px 2px 0}
 #stats{display:flex;gap:28px;margin:14px 2px;color:var(--dim)}
@@ -94,7 +97,7 @@ footer{margin-top:24px;color:var(--dim);font-size:.9rem}
   </div>
   <p class="cap" id="where">Данные хранятся в этом браузере. Войдите через Google, чтобы прогресс сохранялся в облаке и был доступен на любом компьютере, или скачайте файл истории.</p>
 </section>
-<footer>Печатайте прямо на странице, смотрите на текст, а не на клавиши. Backspace исправляет ошибку, Esc — новое упражнение, Enter после финиша — следующее.</footer>
+<footer>Печатайте прямо на странице, смотрите на текст, а не на клавиши. Курсор ждёт, пока не нажмёте нужную клавишу; клавиши, где были ошибки, подчёркнуты. Esc — новое упражнение, Enter после финиша — следующее.</footer>
 </main>
 <script>
 const $=s=>document.querySelector(s);
@@ -130,7 +133,7 @@ const CODE=[
  ['try:','    value = int(input("Number: "))','except ValueError:','    print("Not a number")','else:','    print(value * 2)']
 ].map(a=>a.join('\n'));
 
-let mode='combo',target='',typed=[],auto=new Set(),miss={},tries={},keys=0,hit=0,t0=0,tEnd=0,done=false,last='';
+let mode='combo',target='',typed=[],auto=new Set(),fixed=new Set(),miss={},tries={},keys=0,hit=0,t0=0,tEnd=0,done=false,last='';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let best=load('tt-best',{}),hist=load('tt-hist',[]),kstat=load('tt-keys',{});
@@ -149,7 +152,7 @@ function newTarget(){
   return last=t;
 }
 function start(){
-  target=newTarget();typed=[];auto=new Set();miss={};tries={};keys=hit=t0=tEnd=0;done=false;
+  target=newTarget();typed=[];auto=new Set();fixed=new Set();miss={};tries={};keys=hit=t0=tEnd=0;done=false;
   $('#result').hidden=true;$('#lvl').style.display=mode==='combo'?'':'none';$('#cust').hidden=mode!=='custom';
   draw();renderHist();
 }
@@ -163,14 +166,11 @@ function draw(){
   let h='';
   for(let i=0;i<target.length;i++){
     const c=target[i];
-    const cls=i<typed.length?(typed[i]===c?'ok':'bad'):i===typed.length?'cur':'';
+    const cls=i<typed.length?(fixed.has(i)?'ok fix':'ok'):i===typed.length?(fixed.has(i)?'cur bad':'cur'):'';
     h+=`<span class="${cls}">${c==='\n'?'↵':esc(c)}</span>${c==='\n'?'\n':''}`;
   }
   $('#text').innerHTML=h;
   $('#text').classList.toggle('done',done);
-  const atEnd=!done&&typed.length>=target.length;
-  $('#note').hidden=!atEnd;
-  if(atEnd)$('#note').textContent='Конец текста, но в нём есть ошибки (красные символы). Исправьте их клавишей Backspace или нажмите Enter, чтобы завершить как есть.';
   const n=target[typed.length];
   document.querySelectorAll('.k').forEach(k=>k.classList.toggle('on',!done&&n!==undefined&&k.dataset.k===(n===' '?' ':n.toLowerCase())));
   stats();
@@ -213,12 +213,16 @@ document.addEventListener('keydown',e=>{
   const ch=k==='Enter'?'\n':k.length===1?k:null;
   if(ch===null)return;
   e.preventDefault();
-  if(typed.length>=target.length){if(k==='Enter'&&target)finish();return}
+  if(typed.length>=target.length)return;
   if(!t0)t0=performance.now();
   const exp=target[typed.length];
   if(ch===' '&&exp!==' '&&auto.has(typed.length-1))return;
-  keys++;tries[exp]=(tries[exp]||0)+1;
-  if(ch===exp)hit++;else miss[exp]=(miss[exp]||0)+1;
+  keys++;
+  if(ch!==exp){
+    if(!fixed.has(typed.length)){fixed.add(typed.length);miss[exp]=(miss[exp]||0)+1}
+    draw();return;
+  }
+  hit++;tries[exp]=(tries[exp]||0)+1;
   typed.push(ch);
   if((mode==='code'||mode==='custom')&&ch==='\n'&&exp==='\n'){
     while(target[typed.length]===' '){auto.add(typed.length);typed.push(' ')}
