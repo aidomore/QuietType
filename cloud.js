@@ -15,8 +15,8 @@ const cfg = {
 
 {
   const { initializeApp } = await import(V + 'firebase-app.js');
-  const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import(V + 'firebase-auth.js');
-  const { getFirestore, doc, runTransaction, serverTimestamp } = await import(V + 'firebase-firestore.js');
+  const { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, deleteUser, onAuthStateChanged } = await import(V + 'firebase-auth.js');
+  const { getFirestore, doc, runTransaction, serverTimestamp, deleteDoc } = await import(V + 'firebase-firestore.js');
 
   const app = initializeApp(cfg);
   const auth = getAuth(app);
@@ -37,12 +37,12 @@ const cfg = {
     return { best, hist, kstat };
   };
 
-  let user = null, busy = Promise.resolve();
+  let user = null, deleting = false, busy = Promise.resolve();
   const ref = () => doc(db, 'users', user.uid);
 
   // Сливает локальные данные с облачными в транзакции, чтобы два устройства не затирали друг друга.
   const sync = () => busy = busy.then(async () => {
-    if (!user) return;
+    if (!user || deleting) return;
     const merged = await runTransaction(db, async tx => {
       const snap = await tx.get(ref());
       const m = merge(window.qt.get(), snap.exists() ? window.qt.clean(snap.data()) : null);
@@ -72,10 +72,40 @@ const cfg = {
   };
   $('#signout').onclick = e => { e.target.blur(); signOut(auth) };
 
+  // Стирает прогресс в облаке и учётную запись. Google требует недавний вход
+  // для удаления аккаунта, поэтому при необходимости просим войти ещё раз.
+  $('#delacct').onclick = async e => {
+    e.target.blur();
+    if (!user || !confirm('Удалить аккаунт и весь прогресс в облаке? Это нельзя отменить. Прогресс в этом браузере останется, его можно удалить, очистив данные сайта.')) return;
+    deleting = true;
+    const u = user;
+    let cloudGone = false;
+    try {
+      await busy;
+      await deleteDoc(doc(db, 'users', u.uid));
+      cloudGone = true;
+      try {
+        await deleteUser(u);
+      } catch (err) {
+        if (err.code !== 'auth/requires-recent-login') throw err;
+        await reauthenticateWithPopup(u, new GoogleAuthProvider());
+        await deleteUser(u);
+      }
+      alert('Аккаунт и прогресс в облаке удалены.');
+    } catch (err) {
+      console.error('QuietType: не удалось удалить аккаунт', err);
+      await signOut(auth).catch(() => {});
+      alert((cloudGone ? 'Прогресс в облаке стёрт, но учётную запись удалить не удалось' : 'Не удалось удалить данные') + ': ' + (err.message || err.code) + '\nВойдите снова и повторите удаление или напишите на aidomore225@gmail.com.');
+    } finally {
+      deleting = false;
+    }
+  };
+
   onAuthStateChanged(auth, u => {
     user = u;
     $('#signin').hidden = !!u;
     $('#signout').hidden = !u;
+    $('#delacct').hidden = !u;
     $('#who').textContent = u ? (u.displayName || u.email) + ' · прогресс сохраняется в облаке' : '';
     $('#where').textContent = u
       ? 'Прогресс сохраняется в вашем аккаунте Google и доступен на любом компьютере после входа.'
