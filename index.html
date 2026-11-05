@@ -136,7 +136,19 @@ const CODE=[
 let mode='combo',target='',typed=[],auto=new Set(),fixed=new Set(),miss={},tries={},keys=0,hit=0,t0=0,tEnd=0,done=false,last='';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-let best=load('tt-best',{}),hist=load('tt-hist',[]),kstat=load('tt-keys',{});
+// Пропускает в прогресс только ожидаемые поля и числа: файл истории или облачная копия
+// могут быть подделаны, а эти значения потом выводятся на страницу.
+const MODES=['combo','text','code','custom'],num=v=>typeof v==='number'&&isFinite(v);
+function clean(d){
+  if(!d||typeof d!=='object')return null;
+  const best={},kstat={},hist=(Array.isArray(d.hist)?d.hist:[])
+    .filter(x=>x&&num(x.t)&&MODES.includes(x.m)&&num(x.w)&&num(x.a))
+    .map(({t,m,w,a})=>({t,m,w,a})).slice(-2000);
+  for(const m of MODES)if(d.best&&num(d.best[m]))best[m]=d.best[m];
+  for(const k in d.kstat||{}){const s=d.kstat[k];if(k.length===1&&s&&num(s.n)&&num(s.e))kstat[k]={n:s.n,e:s.e}}
+  return{best,hist,kstat};
+}
+let{best,hist,kstat}=clean({best:load('tt-best',{}),hist:load('tt-hist',[]),kstat:load('tt-keys',{})});
 
 function newTarget(){
   let t;
@@ -273,8 +285,9 @@ $('#file').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';
   if(!f)return;
   try{
-    const d=JSON.parse(await f.text());
-    if(!Array.isArray(d.hist)||!d.best||!d.kstat)throw 0;
+    const raw=JSON.parse(await f.text());
+    if(!raw||!Array.isArray(raw.hist)||!raw.best||!raw.kstat)throw 0;
+    const d=clean(raw);
     if(!confirm('Заменить текущую историю данными из файла?'))return;
     best=d.best;hist=d.hist;kstat=d.kstat;
     save('tt-best',best);save('tt-hist',hist);save('tt-keys',kstat);
@@ -320,7 +333,8 @@ $('#load').onclick=e=>{
 };
 window.qt={
   get:()=>({best,hist,kstat}),
-  set(d){best=d.best;hist=d.hist;kstat=d.kstat;save('tt-best',best);save('tt-hist',hist);save('tt-keys',kstat);renderHist();stats()}
+  clean,
+  set(d){d=clean(d);if(!d)return;best=d.best;hist=d.hist;kstat=d.kstat;save('tt-best',best);save('tt-hist',hist);save('tt-keys',kstat);renderHist();stats()}
 };
 setInterval(()=>{if(t0&&!done)stats()},250);
 start();

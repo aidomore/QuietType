@@ -1,4 +1,4 @@
-// Вход через Google, синхронизация прогресса с Firestore и аналитика.
+// Вход через Google и синхронизация прогресса с Firestore.
 // Ключ веб-приложения Firebase публичный по задумке: доступ к данным ограничивают правила Firestore.
 // Если Firebase недоступен, тренажёр работает как раньше, только локально.
 const V = 'https://www.gstatic.com/firebasejs/12.4.0/';
@@ -10,21 +10,17 @@ const cfg = {
   projectId: 'quiettype-ef6ec',
   storageBucket: 'quiettype-ef6ec.firebasestorage.app',
   messagingSenderId: '56157416394',
-  appId: '1:56157416394:web:f5114c03325051a15abd33',
-  measurementId: 'G-HZWQPJLV92'
+  appId: '1:56157416394:web:f5114c03325051a15abd33'
 };
 
 {
   const { initializeApp } = await import(V + 'firebase-app.js');
   const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import(V + 'firebase-auth.js');
   const { getFirestore, doc, runTransaction, serverTimestamp } = await import(V + 'firebase-firestore.js');
-  const { getAnalytics, isSupported, logEvent } = await import(V + 'firebase-analytics.js');
 
   const app = initializeApp(cfg);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const ga = cfg.measurementId && await isSupported().catch(() => false) ? getAnalytics(app) : null;
-  const track = (name, params) => { try { ga && logEvent(ga, name, params) } catch (e) {} };
 
   // Объединяет две копии прогресса без потерь и без двойного счёта:
   // история — объединение по времени и режиму, рекорды — максимум,
@@ -49,7 +45,7 @@ const cfg = {
     if (!user) return;
     const merged = await runTransaction(db, async tx => {
       const snap = await tx.get(ref());
-      const m = merge(window.qt.get(), snap.exists() ? snap.data() : null);
+      const m = merge(window.qt.get(), snap.exists() ? window.qt.clean(snap.data()) : null);
       tx.set(ref(), { ...m, updatedAt: serverTimestamp() });
       return m;
     });
@@ -61,10 +57,7 @@ const cfg = {
 
   window.qtCloud = {
     push: sync,
-    finished({ mode, w, a }) {
-      track('exercise_complete', { mode, wpm: w, accuracy: a, signed_in: !!user });
-      sync();
-    }
+    finished: sync
   };
 
   $('#acct').hidden = false;
@@ -72,7 +65,6 @@ const cfg = {
     e.target.blur();
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
-      track('login', { method: 'google' });
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request')
         alert('Не удалось войти: ' + (err.message || err.code));
