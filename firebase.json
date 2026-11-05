@@ -9,6 +9,7 @@
       "README.md",
       "script.js",
       "**/.*",
+      "**/.*/**",
       "**/node_modules/**"
     ],
     "headers": [
